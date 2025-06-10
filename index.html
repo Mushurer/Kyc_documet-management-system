@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KYC Document Organizer</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+    /* Ensuring Tailwind's base, components, and utilities are respected */
+    body {
+      background-image: url('/static/mobile-app-vector-26088392.jpg'); /* Make sure this path is correct */
+      background-size: cover;
+      background-position: center;
+      min-height: 100vh; /* Use min-height for better flexibility */
+      margin: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"; /* Modern font stack */
+      color: #333; /* Default text color - was hsl(var(--foreground)) */
+      padding: 1rem; /* Add padding for smaller screens */
+    }
+
+    .container {
+      background-color: rgba(255, 255, 255, 0.95); /* Slightly more opaque */
+      padding: 2.5rem; /* Increased padding */
+      border-radius: 1rem; /* Slightly softer radius */
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1), 0 5px 10px rgba(0, 0, 0, 0.05); /* Softer, more layered shadow */
+      width: 100%; /* Responsive width */
+      max-width: 900px;
+      backdrop-filter: blur(8px); /* Slightly reduced blur for performance */
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .form-group {
+      margin-bottom: 1.75rem; /* Increased spacing */
+      padding-bottom: 1.75rem; /* Add padding for border */
+      border-bottom: 1px solid #e5e7eb; /* Subtle separator - was hsl(var(--border)) */
+    }
+    .form-group:last-child {
+      margin-bottom: 0;
+      padding-bottom: 0;
+      border-bottom: none;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: #4b5563; /* Muted text color - was hsl(var(--muted-foreground)) */
+      font-weight: 500; /* Medium weight for labels */
+    }
+
+    input[type="file"],
+    input[type="text"] {
+      width: 100%;
+      padding: 0.75rem 1rem; /* Adjusted padding */
+      margin-bottom: 0.5rem;
+      border: 1px solid #d1d5db; /* Default border color - was hsl(var(--border)) */
+      border-radius: 0.5rem; /* Softer radius */
+      box-shadow: inset 0 1px 2px rgba(0,0,0,0.05); /* Subtle inner shadow */
+      transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+
+    input[type="file"]:focus,
+    input[type="text"]:focus {
+      border-color: #3b82f6; /* Blue-500 for focus */
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25); /* Focus ring */
+      outline: none;
+    }
+
+    input[type="file"]::file-selector-button {
+        font-weight: 500;
+        border: 0;
+        padding: 0.65rem 1rem;
+        border-radius: 0.375rem;
+        margin-right: 1rem;
+        background-color: #4f46e5; /* Indigo-600 */
+        color: white;
+        cursor: pointer;
+        transition: background-color 0.2s ease-in-out;
+    }
+    input[type="file"]::file-selector-button:hover {
+        background-color: #4338ca; /* Indigo-700 */
+    }
+
+
+    button, .button-link { /* Style links as buttons too */
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 0.5rem; /* Softer radius */
+      cursor: pointer;
+      transition: background-color 0.2s ease, transform 0.1s ease;
+      font-weight: 500;
+      text-align: center;
+      display: inline-block; /* For <a> tags styled as buttons */
+      text-decoration: none; /* Remove underline from <a> */
+    }
+
+    button:hover, .button-link:hover {
+      transform: translateY(-1px); /* Subtle hover lift */
+    }
+    button:active, .button-link:active {
+        transform: translateY(0px); /* Press down effect */
+    }
+
+    /* Primary Button Style (e.g., Upload, Search) */
+    .btn-primary {
+      background-color: #3b82f6; /* Blue-500 - was hsl(var(--primary)) */
+      color: white; /* was hsl(var(--primary-foreground)) */
+    }
+    .btn-primary:hover {
+      background-color: #2563eb; /* Blue-600 */
+    }
+
+    /* Secondary Button Style (e.g., Instructions) */
+    .btn-secondary {
+      background-color: #6d28d9; /* Violet-700 - for instructions button */
+      color: white;
+    }
+    .btn-secondary:hover {
+      background-color: #5b21b6; /* Violet-800 */
+    }
+
+    /* Tertiary/Link-style Button (e.g., Download links, used .button-link class) */
+    .btn-link-like {
+        background-color: #10b981; /* Green-500 - for download/summary */
+        color: white;
+    }
+    .btn-link-like:hover {
+        background-color: #059669; /* Green-600 */
+    }
+    .btn-zip {
+      background-color: #0ea5e9; /* Sky-500 */
+      color: white;
+    }
+    .btn-zip:hover {
+      background-color: #0284c7; /* Sky-600 */
+    }
+
+
+    #result {
+      margin-top: 2rem;
+      padding: 1.25rem;
+      border: 1px solid #e5e7eb; /* was hsl(var(--border)) */
+      border-radius: 0.5rem;
+      background-color: #f9fafb; /* Lighter gray - was hsl(var(--card)) */
+      color: #374151; /* Darker text for readability - was hsl(var(--card-foreground)) */
+      line-height: 1.6;
+    }
+
+    /* Style for the modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.6); /* Darker overlay */
+      z-index: 1000;
+      overflow-y: auto; /* Allow scrolling in modal if content is long */
+      padding: 1rem; /* Padding for modal itself */
+    }
+
+    .modal-content {
+      position: relative; /* For absolute positioning of close button */
+      margin: 5% auto; /* Centered with margin */
+      background-color: white;
+      padding: 2.5rem; /* Increased padding */
+      border-radius: 0.75rem; /* Softer radius */
+      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2), 0 10px 15px rgba(0, 0, 0, 0.1);
+      width: 90%;
+      max-width: 700px; /* Increased max-width */
+    }
+    .modal-content h2 {
+        font-size: 1.75rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: #1f2937;
+    }
+    .modal-content h3 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-top: 1.5rem;
+        margin-bottom: 0.5rem;
+        color: #374151;
+    }
+    .modal-content p, .modal-content ol li {
+        color: #4b5563;
+        line-height: 1.7;
+        margin-bottom: 0.5rem;
+    }
+    .modal-content ol {
+        list-style-position: inside;
+        padding-left: 0.5rem;
+    }
+
+
+    .close-button {
+      position: absolute;
+      top: 1rem; /* Adjusted position */
+      right: 1rem; /* Adjusted position */
+      font-size: 2rem; /* Larger close icon */
+      font-weight: 300; /* Lighter weight for 'x' */
+      cursor: pointer;
+      background: none;
+      border: none;
+      color: #6b7280; /* Gray-500 */
+      line-height: 1;
+      padding: 0.5rem; /* Make it easier to click */
+    }
+    .close-button:hover {
+        color: #1f2937; /* Darker on hover */
+    }
+
+    /* Progress Bar Enhancement */
+    #progress-bar-container { /* New wrapper for better styling */
+        background-color: #e5e7eb; /* Tailwind gray-200 */
+        border-radius: 9999px; /* pill shape */
+        padding: 2px; /* Optional: for a slight border effect if progress bar is inset */
+    }
+    #progress-bar {
+      background-color: #3b82f6; /* Blue-500 */
+      transition: width 0.3s ease-in-out; /* Smooth transition */
+    }
+    #progress-text {
+      text-align: center; /* Center progress text */
+      font-size: 0.875rem; /* text-sm */
+      margin-top: 0.5rem; /* space above text */
+    }
+
+    /* Empty Folders List Styling */
+    #empty-folders-list div {
+        padding: 0.75rem 0.5rem;
+        border-bottom: 1px solid #f3f4f6; /* Lighter border */
+    }
+    #empty-folders-list div:last-child {
+        border-bottom: none;
+    }
+    #empty-folders-list button {
+        padding: 0.35rem 0.75rem; /* Smaller button */
+        font-size: 0.875rem; /* text-sm */
+    }
+
+    .developer-credit {
+        position: fixed;
+        bottom: 0.75rem;
+        left: 0.75rem;
+        color: #9ca3af; /* Gray-400 */
+        font-size: 0.75rem; /* text-xs */
+        background-color: rgba(255,255,255,0.7);
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+    }
+  </style>
+</head>
+
+<body class="bg-gray-100">
+  <div class="container">
+    <header class="mb-8 text-center">
+        <h1 class="text-4xl font-bold text-gray-800">KYC Document Organizer</h1>
+        <p class="text-lg text-gray-600 mt-2">Streamline your document management process.</p>
+    </header>
+
+    <div class="mb-6 text-center">
+        <button id="instructions-button"
+        class="btn-secondary py-2 px-6 rounded-lg shadow hover:shadow-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50">
+        View Instructions
+        </button>
+    </div>
+
+
+    <div id="upload-section" class="form-group">
+      <h2 class="text-2xl font-semibold mb-4 text-gray-700">1. Upload Excel File</h2>
+      <form id="upload-form" action="/upload" method="POST" enctype="multipart/form-data">
+        <label for="excel-file" class="sr-only">Choose Excel File:</label> <input type="file" id="excel-file" name="file" accept=".xlsx, .xls" required
+          class="mb-3">
+        <button type="submit"
+          class="w-full sm:w-auto btn-primary py-2.5 px-6 rounded-lg shadow hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block mr-2 -mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+          </svg>
+          Upload Excel
+        </button>
+      </form>
+    </div>
+
+    <div id="search-section" class="form-group">
+      <h2 class="text-2xl font-semibold mb-4 text-gray-700">2. Search & Organize Documents</h2>
+      <form id="document-search-form" method="POST" action="/search-docs">
+        <label for="directory">Directory to Search:</label>
+        <input type="text" id="directory" name="directory" placeholder="Enter the full path to the directory..." required
+          class="mb-3">
+           <div class="flex items-center mb-3">
+            <input type="checkbox" id="disable-exclusions" name="disable_exclusions" class="mr-2">
+            <label for="disable-exclusions">Disable document name exclusions</label>
+          </div>
+        <button type="submit"
+          class="w-full sm:w-auto btn-primary py-2.5 px-6 rounded-lg shadow hover:shadow-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50" style="background-color: #10b981; /* Green-500 */">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block mr-2 -mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+          </svg>
+          Search & Organize
+        </button>
+      </form>
+    </div>
+
+    <div id="progress-section" class="form-group" style="display: none;">
+      <h2 class="text-xl font-semibold mb-3 text-gray-700">Processing Documents</h2>
+      <div id="progress-bar-container" class="w-full bg-gray-200 rounded-full h-6 mb-2 shadow-inner overflow-hidden">
+        <div id="progress-bar" class="bg-blue-500 h-6 rounded-full text-xs font-medium text-blue-100 text-center p-0.5 leading-none" style="width: 0%">0%</div>
+      </div>
+      <div id="progress-text" class="text-sm text-gray-600 text-center">Preparing...</div>
+    </div>
+
+    <div id="empty-folders-section" class="form-group" style="display: none;">
+      <h2 class="text-xl font-semibold mb-3 text-gray-700">Handle Empty Folders</h2>
+      <div id="empty-folders-list" class="mb-4 bg-gray-50 p-3 rounded-md shadow-sm max-h-60 overflow-y-auto"></div>
+      <div class="manual-search-form mt-3">
+        <label for="manual-search-path" class="mb-1">Manually provide document path for selected folder:</label>
+        <input type="text" id="manual-search-path" placeholder="Enter folder path to search" class="mb-2">
+        <button onclick="searchManually()" class="btn-primary py-2 px-4 rounded-md shadow hover:shadow-md focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-opacity-50" style="background-color: #f59e0b; /* Amber-500 */">
+          Search Manually for Selected
+        </button>
+      </div>
+    </div>
+
+    <div id="result" class="mt-6 p-4 border-t border-gray-200 text-sm">
+      Awaiting actions...
+    </div>
+
+    <div class="mt-8 pt-6 border-t border-gray-300 flex flex-col sm:flex-row justify-center space-y-3 sm:space-y-0 sm:space-x-4">
+      <a href="/download-zip" class="button-link btn-zip py-2.5 px-6 rounded-lg shadow hover:shadow-md focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-opacity-50">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block mr-2 -mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+        </svg>
+        Download All Documents (ZIP)
+      </a>
+      <a href="/download-excel" class="button-link btn-link-like py-2.5 px-6 rounded-lg shadow hover:shadow-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50">
+         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block mr-2 -mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+          <path d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" />
+          <path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z" />
+          <path d="M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z" />
+        </svg> Download Summary (Excel)
+      </a>
+    </div>
+
+    <div class="developer-credit">
+      Developer: Martin Mushure
+    </div>
+
+    <div id="instructions-modal" class="modal">
+      <div class="modal-content">
+        <button class="close-button" id="close-instructions-button" aria-label="Close instructions">&times;</button>
+        <h2>Instructions</h2>
+        <p>This application organizes KYC documents by creating folders based on data from an Excel file and copying
+          relevant documents into those folders.</p>
+
+        <h3>Excel File Structure</h3>
+        <p>The Excel file should have the following structure:</p>
+        <ol class="list-decimal list-inside space-y-1">
+          <li><strong>Column 1:</strong> EC Number (e.g., 123456)</li>
+          <li><strong>Column 2:</strong> Name (e.g., John Doe)</li>
+        </ol>
+        <p class="mt-2">The application will create a folder for each row in the Excel file, named "[Name] [EC Number]".</p>
+
+        <h3>How to Use</h3>
+        <ol class="list-decimal list-inside space-y-1">
+          <li>Upload the Excel file using the "Upload Excel" button.</li>
+          <li>Enter the full directory path where your source documents are located.</li>
+          <li>Click "Search & Organize" to begin the process. Folders will be created in a new "organized_documents" directory within the source directory you specified.</li>
+          <li>If any folders remain empty after the automated search, you can use the "Handle Empty Folders" section to manually specify a search path for documents related to a selected empty folder.</li>
+          <li>Monitor the progress and check the results area for messages.</li>
+          <li>Once processing is complete, you can download all organized documents as a ZIP file or a summary Excel report.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div id="results-section" class="form-group" style="display: none;">
+      <h2 class="text-xl font-semibold mb-3 text-gray-700">Search Results</h2>
+      <div id="results" class="bg-green-50 border border-green-200 rounded-lg p-4 text-green-800 mb-4"></div>
+
+      <div id="summary-section" style="display: none;">
+        <h3 class="text-lg font-semibold mb-3 text-gray-700">Client Summary</h3>
+        <div class="overflow-x-auto">
+          <table id="client-summary-table" class="min-w-full bg-white border border-gray-200 rounded-lg">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">Client Name</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">EC Number</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">Status</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">Files Found</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">Total Files</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">Documents</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">Action</th>
+              </tr>
+            </thead>
+            <tbody id="summary-table-body" class="bg-white divide-y divide-gray-200">
+              <!-- Table rows will be populated here -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  <script>
+    let selectedFolderForManualSearch = null;
+
+    // Show instructions modal
+    document.getElementById('instructions-button').addEventListener('click', function() {
+      document.getElementById('instructions-modal').style.display = 'block';
+    });
+
+    // Close instructions modal
+    document.getElementById('close-instructions-button').addEventListener('click', function() {
+      document.getElementById('instructions-modal').style.display = 'none';
+    });
+
+    // Close modal when clicking outside
+    window.addEventListener('click', function(event) {
+      const modal = document.getElementById('instructions-modal');
+      if (event.target === modal) {
+        modal.style.display = 'none';
+      }
+    });
+
+    // Show empty folders
+    function showEmptyFolders() {
+      fetch('/get-empty-folders')
+      .then(response => response.json())
+      .then(emptyFolders => {
+        const emptyFoldersSection = document.getElementById('empty-folders-section');
+        const emptyFoldersList = document.getElementById('empty-folders-list');
+
+        if (emptyFolders.length === 0) {
+          emptyFoldersList.innerHTML = '<p class="text-green-600 font-semibold">All client folders have documents!</p>';
+        } else {
+          emptyFoldersList.innerHTML = `
+            <p class="text-orange-600 font-semibold mb-3">Found ${emptyFolders.length} empty folders:</p>
+            <div class="grid gap-2">
+              ${emptyFolders.map(folder => `
+                <div class="flex items-center justify-between bg-orange-50 border border-orange-200 rounded-lg p-3">
+                  <span class="text-gray-700">${folder}</span>
+                  <button onclick="selectFolderForManualSearch('${folder}')" 
+                    class="btn-primary py-1 px-3 rounded text-sm" style="background-color: #f59e0b;">
+                    Manual Search
+                  </button>
+                </div>
+              `).join('')}
+            </div>
+          `;
+        }
+        emptyFoldersSection.style.display = 'block';
+      });
+    }
+
+    // Select folder for manual search
+    function selectFolderForManualSearch(folderName) {
+      selectedFolderForManualSearch = folderName;
+      document.getElementById('selected-folder-name').textContent = folderName;
+      document.getElementById('manual-search-section').style.display = 'block';
+    }
+
+    // Hide manual search
+    function hideManualSearch() {
+      document.getElementById('manual-search-section').style.display = 'none';
+      selectedFolderForManualSearch = null;
+    }
+
+    // Perform manual search
+    function performManualSearch() {
+      const searchPath = document.getElementById('manual-search-path').value;
+      if (!searchPath) {
+        alert('Please enter a search directory path');
+        return;
+      }
+
+      const data = {
+        search_path: searchPath,
+        folder: selectedFolderForManualSearch
+      };
+
+      fetch('/manual-search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      })
+      .then(response => response.json())
+      .then(result => {
+        if (result.error) {
+          alert('Error: ' + result.message);
+        } else {
+          alert(result.message);
+          hideManualSearch();
+          showEmptyFolders(); // Refresh empty folders list
+        }
+      })
+      .catch(error => {
+        alert('Error: ' + error.message);
+      });
+    }
+
+    // Handle file upload
+    document.getElementById('upload-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const formData = new FormData(this);
+      const loadingDiv = document.getElementById('upload-loading');
+      const messageDiv = document.getElementById('upload-message');
+
+      loadingDiv.style.display = 'block';
+      messageDiv.style.display = 'none';
+
+      fetch('/upload', {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => response.text())
+      .then(data => {
+        loadingDiv.style.display = 'none';
+        messageDiv.textContent = data;
+        messageDiv.className = 'mt-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded';
+        messageDiv.style.display = 'block';
+      })
+      .catch(error => {
+        loadingDiv.style.display = 'none';
+        messageDiv.textContent = 'Error uploading file: ' + error.message;
+        messageDiv.className = 'mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded';
+        messageDiv.style.display = 'block';
+      });
+    });
+
+    // Handle document search
+    document.getElementById('document-search-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const directory = document.getElementById('directory').value;
+      const disableExclusions = document.getElementById('disable-exclusions').checked;
+
+      const data = {
+        directory: directory,
+        disable_exclusions: disableExclusions
+      };
+
+      const progressSection = document.getElementById('progress-section');
+      const progressBar = document.getElementById('progress-bar');
+      const resultsSection = document.getElementById('results-section');
+      const resultsDiv = document.getElementById('results');
+      const summarySection = document.getElementById('summary-section');
+
+      progressSection.style.display = 'block';
+      resultsSection.style.display = 'none';
+
+      // Simulate progress
+      let progress = 0;
+      const progressInterval = setInterval(() => {
+        progress += Math.random() * 20;
+        if (progress > 90) progress = 90;
+        progressBar.style.width = progress + '%';
+        progressBar.textContent = Math.round(progress) + '%';
+      }, 500);
+
+      fetch('/search-docs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      })
+      .then(response => response.json())
+      .then(data => {
+        clearInterval(progressInterval);
+        progressBar.style.width = '100%';
+        progressBar.textContent = '100%';
+
+        setTimeout(() => {
+          progressSection.style.display = 'none';
+          resultsSection.style.display = 'block';
+
+          if (data.error) {
+            resultsDiv.textContent = data.message;
+            resultsDiv.className = 'bg-red-50 border border-red-200 rounded-lg p-4 text-red-800';
+          } else {
+            resultsDiv.innerHTML = `
+              <h3 class="font-semibold mb-2">Search Complete!</h3>
+              <p><strong>Folders processed:</strong> ${data.folders_created}</p>
+              <p><strong>Files copied:</strong> ${data.files_copied}</p>
+              <p><strong>Total size:</strong> ${data.total_size}</p>
+              ${data.empty_folders.length > 0 ? 
+                `<p class="mt-2"><strong>Empty folders:</strong> ${data.empty_folders.join(', ')}</p>` : 
+                '<p class="mt-2 text-green-600"><strong>All folders have documents!</strong></p>'
+              }
+            `;
+            resultsDiv.className = 'bg-green-50 border border-green-200 rounded-lg p-4 text-green-800';
+
+            // Populate summary table
+            if (data.client_summary) {
+              populateSummaryTable(data.client_summary);
+              summarySection.style.display = 'block';
+            }
+          }
+        }, 1000);
+      })
+      .catch(error => {
+        clearInterval(progressInterval);
+        progressSection.style.display = 'none';
+        resultsSection.style.display = 'block';
+        resultsDiv.textContent = 'Error: ' + error.message;
+        resultsDiv.className = 'bg-red-50 border border-red-200 rounded-lg p-4 text-red-800';
+      });
+    });
+
+    // Populate summary table
+    function populateSummaryTable(clientSummary) {
+      const tableBody = document.getElementById('summary-table-body');
+      tableBody.innerHTML = '';
+
+      clientSummary.forEach(client => {
+        const row = document.createElement('tr');
+        const statusClass = client.is_empty ? 'text-red-600' : 'text-green-600';
+        const statusText = client.is_empty ? 'Empty' : 'Has Documents';
+
+        row.innerHTML = `
+          <td class="px-4 py-3 text-sm text-gray-900">${client.client_name}</td>
+          <td class="px-4 py-3 text-sm text-gray-900">${client.ec_number}</td>
+          <td class="px-4 py-3 text-sm font-medium ${statusClass}">${statusText}</td>
+          <td class="px-4 py-3 text-sm text-gray-900">${client.files_found}</td>
+          <td class="px-4 py-3 text-sm text-gray-900">${client.total_files}</td>
+          <td class="px-4 py-3 text-sm text-gray-900">
+            ${client.documents.length > 0 ? 
+              `<span class="text-xs">${client.documents.slice(0, 2).join(', ')}${client.documents.length > 2 ? '...' : ''}</span>` : 
+              'No documents'
+            }
+          </td>
+          <td class="px-4 py-3 text-sm">
+            ${client.is_empty ? 
+              `<button onclick="selectFolderForManualSearch('${client.folder_name}')" 
+                class="text-blue-600 hover:text-blue-900 text-xs">Manual Search</button>` : 
+              '<span class="text-green-600 text-xs">Complete</span>'
+            }
+          </td>
+        `;
+        tableBody.appendChild(row);
+      });
+    }
+  </script>
+</body>
+
+</html>

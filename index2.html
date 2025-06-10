@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Loan Balance Calculator</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --secondary: #64748b;
+            --accent: #8b5cf6;
+            --background: #f8fafc;
+            --surface: #ffffff;
+            --text: #1e293b;
+            --border: #e2e8f0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--background);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            color: var(--text);
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            background: var(--surface);
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+
+        h1 {
+            color: var(--text);
+            text-align: center;
+            margin-bottom: 2rem;
+            font-size: 2.25rem;
+            font-weight: 700;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--secondary);
+            font-weight: 500;
+            font-size: 0.875rem;
+        }
+
+        input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            transition: all 0.2s;
+            background: var(--surface);
+        }
+
+        input:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        button {
+            background: var(--primary);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        button:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 2rem;
+            background: var(--surface);
+            border-radius: 0.5rem;
+            overflow: hidden;
+            box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+        }
+
+        th, td {
+            padding: 1rem;
+            text-align: right;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            background: var(--primary);
+            color: white;
+            font-weight: 500;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:nth-child(even) {
+            background: rgba(0, 0, 0, 0.02);
+        }
+
+        .repayment-input {
+            width: 120px;
+            padding: 0.5rem;
+            border: 1px solid var(--border);
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            text-align: right;
+        }
+
+        .calculation-info {
+            text-align: right;
+            margin-top: 1.5rem;
+            color: var(--secondary);
+            font-size: 0.875rem;
+        }
+
+        #depositModal {
+            background: var(--surface);
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- Calculator Widget -->
+    <div id="calculator" style="position: fixed; top: 20px; right: 20px; background: white; border: 2px solid #ddd; border-radius: 10px; padding: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 1000; width: 200px;">
+        <h4 style="margin: 0 0 10px 0; text-align: center; color: #333;">Calculator</h4>
+        <input type="text" id="calcDisplay" style="width: 100%; padding: 8px; margin-bottom: 10px; text-align: right; font-size: 16px; border: 1px solid #ccc; border-radius: 4px;" readonly>
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px;">
+            <button onclick="clearCalc()" style="background: #e74c3c; color: white; padding: 10px; border: none; border-radius: 4px; cursor: pointer;">C</button>
+            <button onclick="appendToCalc('/')" style="background: #3498db; color: white; padding: 10px; border: none; border-radius: 4px; cursor: pointer;">÷</button>
+            <button onclick="appendToCalc('*')" style="background: #3498db; color: white; padding: 10px; border: none; border-radius: 4px; cursor: pointer;">×</button>
+            <button onclick="deleteLastCalc()" style="background: #f39c12; color: white; padding: 10px; border: none; border-radius: 4px; cursor: pointer;">⌫</button>
+            
+            <button onclick="appendToCalc('7')" style="background: #95a5a6; color: white; padding: 10px; border: none; border-radius: 4px; cursor: pointer;">7</button>
+            <button onclick="appendToCalc('8')" style="background: #95a5a6; color: white; padding: 10px; border: none; border-radius: 4px; cursor: pointer;">8</button>
+            <button onclick="appendToCalc('9')" style="background: #95a5a6; color: white; padding: 10px; border: none; border-radius: 4px; cursor: pointer;">9</button>
+            <button onclick="appendToCalc('-')" style="background: #3498db; color: white; padding: 10px; border: none; border-radius: 4px; cursor: pointer;">-</button>
+            
+            <button onclick="appendToCalc('4')" style="background: #95a5a6; color: white; padding: 10px; border: none; border-radius: 4px; cursor: pointer;">4</button>
+            <button onclick="appendToCalc('5')" style="background: #95a5a6; color: white; padding: 10px; border: none; border-radius: 4px; cursor: pointer;">5</button>
+            <button onclick="appendToCalc('6')" style="background: #95a5a6; color: white; padding: 10px; border: none; border-radius: 4px; cursor: pointer;">6</button>
+            <button onclick="appendToCalc('+')" style="background: #3498db; color: white; padding: 10px; border: none; border-radius: 4px; cursor: pointer;">+</button>
+            
+            <button onclick="appendToCalc('1')" style="background: #95a5a6; color: white; padding: 10px; border: none; border-radius: 4px; cursor: pointer;">1</button>
+            <button onclick="appendToCalc('2')" style="background: #95a5a6; color: white; padding: 10px; border: none; border-radius: 4px; cursor: pointer;">2</button>
+            <button onclick="appendToCalc('3')" style="background: #95a5a6; color: white; padding: 10px; border: none; border-radius: 4px; cursor: pointer;">3</button>
+            <button onclick="calculateResult()" style="background: #27ae60; color: white; padding: 10px; border: none; border-radius: 4px; cursor: pointer; grid-row: span 2;">=</button>
+            
+            <button onclick="appendToCalc('0')" style="background: #95a5a6; color: white; padding: 10px; border: none; border-radius: 4px; cursor: pointer; grid-column: span 2;">0</button>
+            <button onclick="appendToCalc('.')" style="background: #95a5a6; color: white; padding: 10px; border: none; border-radius: 4px; cursor: pointer;">.</button>
+        </div>
+    </div>
+    
+    <h1>Loan Balance Calculator</h1>
+    <div class="form-group">
+        <label>Client Name:</label>
+        <input type="text" id="client_name" required>
+    </div>
+    <div class="form-group">
+        <label>Initial Balance:</label>
+        <input type="number" id="initial_balance" required>
+    </div>
+    <div class="form-group">
+        <label>Interest Rate (% per annum):</label>
+        <input type="number" id="interest_rate" value="120" required>
+    </div>
+    <div class="form-group">
+        <label>Service Fee:</label>
+        <input type="number" id="service_fee" required>
+    </div>
+    <div class="form-group">
+        <label>Start Date:</label>
+        <input type="date" id="start_date" required>
+    </div>
+    <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+        <button onclick="calculateLoan(false)" style="width: 50%;">Calculate</button>
+        <button onclick="toggleRepaymentsTab()" style="width: 50%; background: #8e44ad;" id="repaymentsTabBtn">Show Repayments Total</button>
+    </div>
+    
+    <!-- Repayments Summary Tab -->
+    <div id="repaymentsTab" style="display: none; background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #dee2e6;">
+        <h3 style="margin-top: 0; color: #495057;">Repayments Summary</h3>
+        
+        <!-- Total Collectable Section -->
+        <div style="background: white; padding: 10px; border-radius: 5px; margin-bottom: 15px; border: 1px solid #dee2e6;">
+            <h4 style="margin: 0 0 10px 0; color: #495057;">Total Collectable</h4>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; align-items: center;">
+                <div>
+                    <label style="font-size: 12px; color: #6c757d;">Installment:</label>
+                    <input type="number" id="installmentAmount" style="width: 100%; padding: 5px; border: 1px solid #ccc; border-radius: 3px;" placeholder="0.00" onchange="calculateTotalCollectable()">
+                </div>
+                <div>
+                    <label style="font-size: 12px; color: #6c757d;">Period:</label>
+                    <input type="number" id="periodCount" style="width: 100%; padding: 5px; border: 1px solid #ccc; border-radius: 3px;" placeholder="0" onchange="calculateTotalCollectable()">
+                </div>
+                <div>
+                    <label style="font-size: 12px; color: #6c757d;">Total Collectable:</label>
+                    <div style="font-weight: bold; font-size: 16px; color: #28a745;">$<span id="totalCollectable">0.00</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Repayments Section -->
+        <div style="background: white; padding: 10px; border-radius: 5px; margin-bottom: 15px; border: 1px solid #dee2e6;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <h4 style="margin: 0; color: #495057;">Total Repayments</h4>
+                <button onclick="toggleRepaymentsTab()" style="background: #6c757d; padding: 5px 10px; font-size: 12px;">Close</button>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 10px;">
+                <input type="number" id="additionalRepayment" style="padding: 5px; border: 1px solid #ccc; border-radius: 3px; width: 120px;" placeholder="Add amount">
+                <button onclick="addToTotalRepayments()" style="background: #28a745; color: white; padding: 5px 10px; border: none; border-radius: 3px; font-size: 12px;">Add</button>
+                <button onclick="resetAdditionalRepayments()" style="background: #dc3545; color: white; padding: 5px 10px; border: none; border-radius: 3px; font-size: 12px;">Reset</button>
+            </div>
+            <div style="font-weight: bold; font-size: 16px; color: #007bff;">
+                Total Repayments: $<span id="totalRepayments">0.00</span>
+            </div>
+            <div style="margin-top: 5px; font-size: 14px; color: #6c757d;">
+                <div>Monthly breakdown: <span id="monthlyBreakdown"></span></div>
+                <div id="additionalRepaymentsDisplay" style="margin-top: 5px;"></div>
+            </div>
+        </div>
+
+        <!-- Balance Section -->
+        <div style="background: white; padding: 10px; border-radius: 5px; border: 1px solid #dee2e6;">
+            <h4 style="margin: 0 0 10px 0; color: #495057;">Balance</h4>
+            <div id="balanceDisplay" style="font-weight: bold; font-size: 18px;"></div>
+        </div>
+    </div>
+
+    <div id="depositModal" style="display: none;">
+        <h3>Add Direct Deposit</h3>
+        <div class="form-group">
+            <label>Date:</label>
+            <input type="date" id="deposit_date">
+        </div>
+        <div class="form-group">
+            <label>Amount:</label>
+            <input type="number" id="deposit_amount">
+        </div>
+        <button onclick="addDirectDeposit()" style="background: #8e44ad;">Add Deposit</button>
+        <button onclick="closeDirectDepositModal()" style="background: #95a5a6; margin-top: 10px;">Cancel</button>
+    </div>
+
+    <table id="balanceTable">
+        <thead>
+            <tr>
+                <th>Month End Date</th>
+                <th>Opening Balance</th>
+                <th>Interest</th>
+                <th>Service Fee</th>
+                <th>Repayment <button onclick="addRepaymentColumn()" style="padding: 2px 8px; font-size: 12px">=</button></th>
+                <th>Closing Balance</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for transaction in transactions %}
+        <tr class="{{ 'transaction-row' if transaction.is_direct_deposit or transaction.is_mid_month_transaction }}">
+            <td>{{ transaction.end_date }}{{ ' (Transaction)' if transaction.is_direct_deposit or transaction.is_mid_month_transaction }}</td>
+            <td>${{ "%.2f"|format(transaction.opening_balance) }}</td>
+            <td>${{ "%.2f"|format(transaction.interest) }}</td>
+            <td>${{ "%.2f"|format(transaction.service_fee) }}</td>
+            <td><input type="number" class="repayment-input" value="{{ "%.2f"|format(transaction.repayment) }}"
+                onchange="updateRepayment({{ loop.index0 }}, this.value)"
+                style="{{ 'font-weight: bold; color: #2563eb;' if transaction.is_direct_deposit or transaction.is_mid_month_transaction }}"></td>
+            <td>${{ "%.2f"|format(transaction.closing_balance) }}</td>
+            <td>{% if not transaction.is_direct_deposit and not transaction.is_mid_month_transaction %}
+                <button onclick="showMidMonthModal({{ loop.index0 }})" style="padding: 2px 8px; font-size: 12px">+</button>
+                {% endif %}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+    </table>
+    <div style="display: flex; gap: 10px; margin-top: 20px;">
+        <button onclick="calculateLoan(true)" style="width: 33%; background: #27ae60;">Download Excel</button>
+        <button onclick="calculateProjection()" style="width: 33%; background: #e67e22;">Calculate Projection</button>
+        <button onclick="printTable()" style="width: 33%; background: #3498db;">Print</button>
+    </div>
+    <div class="calculation-info" id="calculationInfo"></div>
+</div>
+
+<!-- Mid Month Transaction Modal -->
+<div id="midMonthModal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+     background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 20px rgba(0,0,0,0.2); z-index: 1000;">
+    <h3>Add Mid-Month Transaction</h3>
+    <div class="form-group">
+        <label>Date:</label>
+        <input type="date" id="midMonth_date">
+    </div>
+    <div class="form-group">
+        <label>Amount:</label>
+        <input type="number" id="midMonth_amount">
+    </div>
+    <div class="form-group">
+        <label>Service Fee:</label>
+        <input type="number" id="midMonth_service_fee" value="0">
+    </div>
+    <div class="form-group">
+        <label>Interest Rate (%):</label>
+        <input type="number" id="midMonth_interest_rate">
+    </div>
+    <button onclick="addMidMonthTransaction()" style="background: var(--accent);">Add Transaction</button>
+    <button onclick="closeMidMonthModal()" style="background: var(--secondary); margin-top: 10px;">Cancel</button>
+</div>
+
+<script>
+let savedRepayments = new Array(12).fill(0);
+let selectedMonthIndex = null;
+let transactionMemory = [];
+
+function storeTableData() {
+    const tbody = document.querySelector('#balanceTable tbody');
+    transactionMemory = Array.from(tbody.rows).map(row => ({
+        date: row.cells[0].textContent.split(' (')[0],
+        opening_balance: parseFloat(row.cells[1].textContent.replace('$', '')),
+        interest: parseFloat(row.cells[2].textContent.replace('$', '')),
+        service_fee: parseFloat(row.cells[3].textContent.replace('$', '')),
+        repayment: parseFloat(row.cells[4].querySelector('input').value),
+        closing_balance: parseFloat(row.cells[5].textContent.replace('$', '')),
+        is_transaction: row.className.includes('transaction-row')
+    }));
+}
+
+function calculateLoan(download = false) {
+    // Validate required fields
+    const clientName = document.getElementById('client_name').value.trim();
+    const initialBalance = document.getElementById('initial_balance').value.trim();
+    const interestRate = document.getElementById('interest_rate').value.trim();
+    const serviceFee = document.getElementById('service_fee').value.trim();
+    const startDate = document.getElementById('start_date').value.trim();
+    
+    if (!clientName) {
+        alert('Please enter a client name');
+        return;
+    }
+    if (!initialBalance) {
+        alert('Please enter an initial balance');
+        return;
+    }
+    if (!interestRate) {
+        alert('Please enter an interest rate');
+        return;
+    }
+    if (!serviceFee) {
+        alert('Please enter a service fee');
+        return;
+    }
+    if (!startDate) {
+        alert('Please select a start date');
+        return;
+    }
+
+    const data = {
+        download: download,
+        client_name: clientName,
+        initial_balance: initialBalance,
+        interest_rate: interestRate,
+        service_fee: serviceFee,
+        start_date: startDate,
+        repayments: savedRepayments
+    };
+
+    fetch('/calculate', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => {
+        if (download) {
+            return response.blob().then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `loan_schedule_${document.getElementById('client_name').value}.xlsx`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        const tbody = document.getElementById('balanceTable').querySelector('tbody');
+        tbody.innerHTML = '';
+
+        data.months.forEach((month, index) => {
+                const row = document.createElement('tr');
+                const isTransaction = month.is_direct_deposit || month.is_mid_month_transaction;
+                row.className = isTransaction ? 'transaction-row' : '';
+                row.innerHTML = `
+                    <td>${month.end_date}${isTransaction ? ' (Transaction)' : ''}</td>
+                    <td>$${month.opening_balance.toFixed(2)}</td>
+                    <td>$${month.interest.toFixed(2)}</td>
+                    <td>$${month.service_fee.toFixed(2)}</td>
+                    <td><input type="number" class="repayment-input" value="${month.repayment.toFixed(2)}" onchange="updateRepayment(${index}, this.value)"
+                        style="${isTransaction ? 'font-weight: bold; color: #2563eb;' : ''}"></td>
+                    <td>$${month.closing_balance.toFixed(2)}</td>
+                    <td>${!isTransaction ? `<button onclick="showMidMonthModal(${index})" style="padding: 2px 8px; font-size: 12px">+</button>` : ''}</td>
+                `;
+            if (month.refund_message) {
+                row.lastElementChild.style.color = 'green';
+                row.lastElementChild.title = month.refund_message;
+            }
+            tbody.appendChild(row);
+        });
+
+        document.getElementById('calculationInfo').innerHTML =
+            `Calculated for ${data.client_name} on ${data.calculated_at}<br>
+            <strong>Projection: ${data.projection}</strong>`;
+    });
+}
+
+function updateRepayment(monthIndex, value) {
+    const numValue = parseFloat(value) || 0;
+    savedRepayments[monthIndex] = numValue;
+    calculateLoan();
+    
+    // Update repayments total if tab is visible
+    const tab = document.getElementById('repaymentsTab');
+    if (tab.style.display === 'block') {
+        updateRepaymentsTotal();
+    }
+}
+
+function calculateProjection() {
+    const lastRow = document.querySelector('#balanceTable tbody tr:last-child');
+    if (!lastRow) return;
+
+    const currentBalance = parseFloat(lastRow.cells[5].textContent.replace('$', ''));
+    const lastRepayment = parseFloat(lastRow.cells[4].querySelector('input').value) || 0;
+
+    fetch('/calculate_projection', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            current_balance: currentBalance,
+            monthly_repayment: lastRepayment,
+            interest_rate: document.getElementById('interest_rate').value,
+            service_fee: document.getElementById('service_fee').value
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        document.getElementById('calculationInfo').innerHTML += `<br><strong>${data.projection}</strong>`;
+    });
+}
+
+function showDirectDepositModal() {
+    document.getElementById('depositModal').style.display = 'block';
+}
+
+function closeDirectDepositModal() {
+    document.getElementById('depositModal').style.display = 'none';
+}
+
+function addDirectDeposit() {
+    const data = {
+        deposit_date: document.getElementById('deposit_date').value,
+        deposit_amount: document.getElementById('deposit_amount').value,
+        client_name: document.getElementById('client_name').value,
+        initial_balance: document.getElementById('initial_balance').value,
+        interest_rate: document.getElementById('interest_rate').value,
+        service_fee: document.getElementById('service_fee').value,
+        start_date: document.getElementById('start_date').value,
+        repayments: savedRepayments,
+        is_direct_deposit: true
+    };
+
+    fetch('/calculate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        closeDirectDepositModal();
+        // Refresh the table with new data
+        updateTable(data);
+    });
+}
+
+function updateTable(data) {
+    const tbody = document.getElementById('balanceTable').querySelector('tbody');
+    tbody.innerHTML = '';
+
+    data.months.forEach((month, index) => {
+                const row = document.createElement('tr');
+                const isTransaction = month.is_direct_deposit || month.is_mid_month_transaction;
+                row.className = isTransaction ? 'transaction-row' : '';
+                row.innerHTML = `
+                    <td>${month.end_date}${isTransaction ? ' (Transaction)' : ''}</td>
+                    <td>$${month.opening_balance.toFixed(2)}</td>
+                    <td>$${month.interest.toFixed(2)}</td>
+                    <td>$${month.service_fee.toFixed(2)}</td>
+                    <td><input type="number" class="repayment-input" value="${month.repayment.toFixed(2)}" onchange="updateRepayment(${index}, this.value)"
+                        style="${isTransaction ? 'font-weight: bold; color: #2563eb;' : ''}"></td>
+                    <td>$${month.closing_balance.toFixed(2)}</td>
+                    <td>${!isTransaction ? `<button onclick="showMidMonthModal(${index})" style="padding: 2px 8px; font-size: 12px">+</button>` : ''}</td>
+                `;
+        if (month.refund_message) {
+            row.lastElementChild.style.color = 'green';
+            row.lastElementChild.title = month.refund_message;
+        }
+        tbody.appendChild(row);
+    });
+
+    document.getElementById('calculationInfo').innerHTML =
+        `Calculated for ${data.client_name} on ${data.calculated_at}<br>
+        <strong>Projection: ${data.projection}</strong>`;
+}
+
+function addRepaymentColumn() {
+    alert('Adding multiple repayment columns will be implemented here.');
+}
+
+// Calculator functions
+function appendToCalc(value) {
+    const display = document.getElementById('calcDisplay');
+    if (display.value === '0' && value !== '.') {
+        display.value = value;
+    } else {
+        display.value += value;
+    }
+}
+
+function clearCalc() {
+    document.getElementById('calcDisplay').value = '';
+}
+
+function deleteLastCalc() {
+    const display = document.getElementById('calcDisplay');
+    display.value = display.value.slice(0, -1);
+}
+
+function calculateResult() {
+    const display = document.getElementById('calcDisplay');
+    try {
+        // Replace display symbols with actual operators
+        let expression = display.value.replace(/×/g, '*').replace(/÷/g, '/');
+        const result = eval(expression);
+        display.value = result;
+    } catch (error) {
+        display.value = 'Error';
+        setTimeout(() => {
+            clearCalc();
+        }, 1500);
+    }
+}
+
+// Repayments tab functions
+let additionalRepayments = [];
+
+function toggleRepaymentsTab() {
+    const tab = document.getElementById('repaymentsTab');
+    const btn = document.getElementById('repaymentsTabBtn');
+    
+    if (tab.style.display === 'none') {
+        updateRepaymentsTotal();
+        tab.style.display = 'block';
+        btn.textContent = 'Hide Repayments Total';
+    } else {
+        tab.style.display = 'none';
+        btn.textContent = 'Show Repayments Total';
+    }
+}
+
+function updateRepaymentsTotal() {
+    const monthlyTotal = savedRepayments.reduce((sum, payment) => sum + payment, 0);
+    const additionalTotal = additionalRepayments.reduce((sum, payment) => sum + payment, 0);
+    const total = monthlyTotal + additionalTotal;
+    
+    document.getElementById('totalRepayments').textContent = total.toFixed(2);
+    
+    const breakdown = savedRepayments.map((payment, index) => 
+        payment > 0 ? `Month ${index + 1}: $${payment.toFixed(2)}` : ''
+    ).filter(item => item !== '').join(', ');
+    
+    document.getElementById('monthlyBreakdown').textContent = breakdown || 'No repayments entered';
+    
+    // Update additional repayments display
+    const additionalDisplay = document.getElementById('additionalRepaymentsDisplay');
+    if (additionalRepayments.length > 0) {
+        const additionalText = additionalRepayments.map((amount, index) => 
+            `Additional ${index + 1}: $${amount.toFixed(2)}`
+        ).join(', ');
+        additionalDisplay.innerHTML = `<strong>Additional payments:</strong> ${additionalText} (Total: $${additionalTotal.toFixed(2)})`;
+    } else {
+        additionalDisplay.innerHTML = '';
+    }
+    
+    // Update balance calculation
+    updateBalance();
+}
+
+function calculateTotalCollectable() {
+    const installment = parseFloat(document.getElementById('installmentAmount').value) || 0;
+    const period = parseFloat(document.getElementById('periodCount').value) || 0;
+    const totalCollectable = installment * period;
+    
+    document.getElementById('totalCollectable').textContent = totalCollectable.toFixed(2);
+    updateBalance();
+}
+
+function addToTotalRepayments() {
+    const additionalAmount = parseFloat(document.getElementById('additionalRepayment').value);
+    
+    if (!isNaN(additionalAmount) && additionalAmount > 0) {
+        additionalRepayments.push(additionalAmount);
+        document.getElementById('additionalRepayment').value = '';
+        updateRepaymentsTotal();
+    } else {
+        alert('Please enter a valid amount');
+    }
+}
+
+function resetAdditionalRepayments() {
+    additionalRepayments = [];
+    updateRepaymentsTotal();
+}
+
+function updateBalance() {
+    const totalCollectable = parseFloat(document.getElementById('totalCollectable').textContent) || 0;
+    const totalRepayments = parseFloat(document.getElementById('totalRepayments').textContent) || 0;
+    const balance = totalCollectable - totalRepayments;
+    
+    const balanceDisplay = document.getElementById('balanceDisplay');
+    
+    if (balance < 0) {
+        balanceDisplay.innerHTML = `<span style="color: #28a745;">Client has a refund of $${Math.abs(balance).toFixed(2)}</span>`;
+    } else {
+        balanceDisplay.innerHTML = `<span style="color: #007bff;">Balance: $${balance.toFixed(2)}</span>`;
+    }
+}
+
+function printTable() {
+    const printWindow = window.open('', '_blank');
+    const table = document.getElementById('balanceTable').cloneNode(true);
+    const info = document.getElementById('calculationInfo').cloneNode(true);
+
+    // Get totals from the repayments tab
+    const totalCollectable = parseFloat(document.getElementById('totalCollectable').textContent) || 0;
+    const totalRepayments = parseFloat(document.getElementById('totalRepayments').textContent) || 0;
+    const balance = totalCollectable - totalRepayments;
+
+    const balanceText = balance < 0 
+        ? `Client has a refund of $${Math.abs(balance).toFixed(2)}`
+        : `Balance: $${balance.toFixed(2)}`;
+
+    const summarySection = `
+        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #dee2e6;">
+            <h3 style="margin-top: 0; color: #495057;">Payment Summary</h3>
+            <p style="margin: 5px 0; font-size: 16px;"><strong>Total Collectable: $${totalCollectable.toFixed(2)}</strong></p>
+            <p style="margin: 5px 0; font-size: 16px;"><strong>Total Repayments Made: $${totalRepayments.toFixed(2)}</strong></p>
+            <p style="margin: 5px 0; font-size: 18px; color: ${balance < 0 ? '#28a745' : '#007bff'};"><strong>${balanceText}</strong></p>
+        </div>
+    `;
+
+    const style = `
+        <style>
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            th, td { padding: 8px; text-align: right; border: 1px solid #ddd; }
+            th { background: #34495e; color: white; }
+            .calculation-info { margin-top: 20px; }
+            @media print {
+                button { display: none; }
+                input { border: none; }
+            }
+        </style>
+    `;
+
+    printWindow.document.write(`
+        <html>
+            <head>${style}</head>
+            <body>
+                <h1>Loan Balance Calculation</h1>
+                ${summarySection}
+                ${table.outerHTML}
+                ${info.outerHTML}
+            </body>
+        </html>
+    `);
+
+    printWindow.document.close();
+    printWindow.print();
+}
+
+function showMidMonthModal(monthIndex) {
+    document.getElementById('midMonthModal').style.display = 'block';
+    selectedMonthIndex = monthIndex;
+}
+
+function closeMidMonthModal() {
+    document.getElementById('midMonthModal').style.display = 'none';
+}
+
+function validateTransactionDate(transactionDate, selectedRow, nextRow) {
+    const tDate = new Date(transactionDate);
+    const selectedDate = new Date(selectedRow.cells[0].textContent);
+    const nextDate = nextRow ? new Date(nextRow.cells[0].textContent) : null;
+
+    if (tDate <= selectedDate) {
+        alert('Transaction date must be after the selected row date');
+        return false;
+    }
+    if (nextDate && tDate >= nextDate) {
+        alert('Transaction date must be before the next row date');
+        return false;
+    }
+    return true;
+}
+
+function addMidMonthTransaction() {
+    const transactionDate = document.getElementById('midMonth_date').value;
+
+    // Store current table state
+    storeTableData();
+
+    const rows = document.querySelector('#balanceTable tbody').rows;
+    const selectedRow = rows[selectedMonthIndex];
+    const nextRow = rows[selectedMonthIndex + 1];
+
+    if (!validateTransactionDate(transactionDate, selectedRow, nextRow)) {
+        return;
+    }
+
+    const data = {
+        midMonth_date: transactionDate,
+        midMonth_amount: document.getElementById('midMonth_amount').value,
+        midMonth_service_fee: document.getElementById('midMonth_service_fee').value,
+        midMonth_interest_rate: document.getElementById('midMonth_interest_rate').value || document.getElementById('interest_rate').value,
+        client_name: document.getElementById('client_name').value,
+        initial_balance: document.getElementById('initial_balance').value,
+        interest_rate: document.getElementById('interest_rate').value,
+        service_fee: document.getElementById('service_fee').value,
+        start_date: document.getElementById('start_date').value,
+        repayments: savedRepayments,
+        month_index: selectedMonthIndex,
+        is_mid_month_transaction: true
+    };
+
+    fetch('/calculate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        closeMidMonthModal();
+        updateTable(data);
+    });
+}
+
+function calculateTodayBalance(endDate, closingBalance) {
+    const today = new Date();
+    const endOfMonth = new Date(endDate);
+    const year = endOfMonth.getFullYear();
+    const month = endOfMonth.getMonth();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const dayOfMonth = today.getDate();
+
+    const balance = closingBalance * (daysInMonth / dayOfMonth);
+    return '$' + balance.toFixed(2);
+}
+</script>
+</body>
+</html>
